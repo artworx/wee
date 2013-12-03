@@ -8,6 +8,8 @@ A minimal PHP MVC framework.
 app/Controllers/TestController.php
 
 ```php
+<?php
+
 namespace Controllers;
 class TestController extends \Wee\Controller {
 }
@@ -16,6 +18,8 @@ class TestController extends \Wee\Controller {
 actions are *public* functions in the controller class
 
 ```php
+<?php
+
 public function index() {
     $this->render('text/index');
 }
@@ -32,6 +36,8 @@ public function update() {
 app/Controllers/ProfileController.php
 
 ```php
+<?php
+
 namespace Controllers;
 class ProfileController extends \Wee\Controller {
     protected function initialize() {
@@ -83,6 +89,8 @@ app/views/profile/index.php
 ```
 
 ```php
+<?php
+
 namespace Controllers;
 class ProfileController extends \Wee\Controller {
     public function edit() {
@@ -221,6 +229,8 @@ CREATE TABLE `user` (
 app/Models/User.php
 
 ```php
+<?php
+
 namespace Models;
 
 class User extends \Wee\Model {
@@ -232,8 +242,12 @@ class User extends \Wee\Model {
 ```
 
 # Field types #
+
 Just define getters and setters:
+
 ```php
+<?php
+
 public function getId() {
      return $this->id;
 }
@@ -300,7 +314,67 @@ $this->registerValidator(function($user){
 
 ## Retrieving errors ##
 
-See:
-- hasError(key)
-- getError(key)
+```php
+<?php
 
+//isValid executes the registered validators
+if (!$user->isValid()) {
+    echo "User is invalid";
+
+    if ($user->hasError('email')) {
+       echo "Email is invalid";
+
+       foreach ($user->getErrors('email') as $error) {
+         echo $error;
+       }
+    }
+}
+
+```
+
+- hasError(key)
+
+checks if `key` as a validation error set.
+
+
+- getErrors(key)
+
+returns a list of errors on `key`, attached with `$object->addError(key, message)`
+
+### Erorrs on views
+
+You can use `errorFor` helper from `app/Helpers/ApplicationHelper.php`
+
+```php
+<div class="errors">
+  <?php echo $view->errorFor($user, 'email') ?>
+</div>
+```
+
+
+## Database access, DAO
+
+- create dao classes in app/Dao/NameDao.php
+- use $this->getConnection() to get a [PDO](http://www.php.net/manual/en/pdo.prepared-statements.php) object
+
+```php
+<?php
+
+namespace Dao;
+
+class PostDao extends \Wee\Dao {
+
+  public function findById($id) {
+    $sql = 'SELECT * FROM posts WHERE id = ?';
+
+    $stmt = $this->getConnection()->prepare($sql);
+    $stmt->execute(array($id));
+
+    return $this->getRow($stmt);
+  }
+}
+```
+
+## DaoFactory
+
+- once you have created the DAO class, you can access it by name using `\Wee\DaoFactory::getDao('post')`
